@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using BookingRoom.Application.DTOs;
-using BookingRoom.Application.Services;
+using Booking.Application.DTOs;
+using Booking.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers;
@@ -26,7 +26,9 @@ public class UserBookingsController : ControllerBase
         BookingDto? booking = await this.booking_service.GetBookingByIdAsync(id: id);
 
         if (booking == null)
-            return NotFound($"Booking with id {id} not found");
+        {
+            return NotFound($"Booking with id = {id} not found");
+        }
 
         return Ok(value: booking);
     }
@@ -34,10 +36,10 @@ public class UserBookingsController : ControllerBase
     /// <summary>
     /// Получить все бронирования пользователя
     /// </summary>
-    [HttpGet("user/{userName}")]
-    public async Task<ActionResult<IEnumerable<BookingDto>>> GetUserBookings(String userName)
+    [HttpGet("user/{id}")]
+    public async Task<ActionResult<IEnumerable<BookingDto>>> GetUserBookings(Int32 id)
     {
-        IEnumerable<BookingDto> bookings = await this.booking_service.GetUserBookingsAsync(userName: userName);
+        IEnumerable<BookingDto> bookings = await this.booking_service.GetUserBookingsAsync(id: id);
         return Ok(value: bookings);
     }
 
@@ -48,13 +50,17 @@ public class UserBookingsController : ControllerBase
     public async Task<ActionResult<BookingDto>> CreateBooking([FromBody] CreateBookingDto create_booking_dto)
     {
         if (!ModelState.IsValid)
+        {
             return BadRequest(modelState: ModelState);
+        }
 
         try
         {
-            BookingDto? booking = await this.booking_service.CreateBookingAsync(createBookingDto: create_booking_dto);
+            BookingDto? booking = await this.booking_service.CreateBookingAsync(create_booking_dto: create_booking_dto);
             if (booking == null)
-                return StatusCode(500, "Failed to create booking");
+            {
+                return StatusCode(statusCode: StatusCodes.Status500InternalServerError, "Error while creating a booking");
+            }
 
             return CreatedAtAction(nameof(GetBooking), new {id = booking.Id}, value: booking);
         }
@@ -65,10 +71,6 @@ public class UserBookingsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return Conflict(error: ex.Message);
-        }
-        catch (Exception)
-        {
-            return StatusCode(500, "An error occurred while creating the booking");
         }
     }
 }

@@ -58,12 +58,13 @@ public class AdminRoomsController : ControllerBase
         try
         {
             RoomDto room = await this.room_service.CreateRoomAsync(create_room_dto: createRoomDto);
-            return CreatedAtAction(nameof(GetRoom), new {id = room.Id}, value: room);
+            return CreatedAtAction(nameof(GetRoom), new { id = room.Id }, value: room);
         }
-        catch (Exception)
+        catch (ArgumentException argument_exception)
         {
-            return StatusCode(statusCode: StatusCodes.Status500InternalServerError, "Creating room error");
+            return Conflict(error: argument_exception.Message);
         }
+        
     }
 
     /// <summary>
@@ -72,21 +73,14 @@ public class AdminRoomsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteRoom(Int32 id)
     {
-        try
-        {
-            DeleteRoomResult result = await this.room_service.DeleteRoomAsync(id: id);
+        DeleteRoomResult result = await this.room_service.DeleteRoomAsync(id: id);
 
-            return result switch
-            {
-                DeleteRoomResult.NotFound => NotFound($"Room with id = {id} not found"),
-                DeleteRoomResult.HasActiveBookings => BadRequest($"Can't delete. Room with id = {id} has active bookings"),
-                DeleteRoomResult.Success => NoContent(),
-                _ => throw new InvalidOperationException("Unexpected result")
-            };
-        }
-        catch (Exception ex)
+        return result switch
         {
-            return StatusCode(statusCode: StatusCodes.Status500InternalServerError, "Error while processing your request");
-        }
+            DeleteRoomResult.NotFound => NotFound($"Room with id = {id} not found"),
+            DeleteRoomResult.HasActiveBookings => BadRequest($"Can't delete. Room with id = {id} has active bookings"),
+            DeleteRoomResult.Success => NoContent(),
+            _ => throw new InvalidOperationException("Unexpected result")
+        };
     }
 }

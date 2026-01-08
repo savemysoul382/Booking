@@ -60,6 +60,11 @@ public class RoomService : IRoomService
             throw new ArgumentException($"Invalid room class: {create_room_dto.Class}. Valid values are: {String.Join(", ", Enum.GetNames<RoomClass>())}");
         }
 
+        if (create_room_dto.Price <= 0)
+        {
+           throw new ArgumentException("Price must be greater than 0");
+        }
+
         Room room = new Room
         {
             Class = room_class,

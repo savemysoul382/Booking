@@ -1,28 +1,31 @@
-using BookingRoom.Application.DTOs;
-using BookingRoom.Data;
-using BookingRoom.Domain.Entities;
+using Booking.Application.DTOs;
+using Booking.Application.Interfaces;
+using Booking.Domain.Entities;
+using Booking.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookingRoom.Application.Services;
+namespace Booking.Application.Services;
 
 public class BookingService : IBookingService
 {
-    private readonly BookingRoomDbContext context;
+    private readonly BookingDbContext context;
 
-    public BookingService(BookingRoomDbContext context)
+    public BookingService(BookingDbContext context)
     {
         this.context = context;
     }
 
     public async Task<BookingDto?> GetBookingByIdAsync(Int32 id)
     {
-        Booking? booking = await this.context.Bookings
+        Booking.Domain.Entities.Booking? booking = await this.context.Bookings
             .Include(b => b.Room)
             .Include(b => b.User)
             .FirstOrDefaultAsync(b => b.Id == id);
 
         if (booking == null)
+        {
             return null;
+        }
 
         return new BookingDto
         {
@@ -50,12 +53,12 @@ public class BookingService : IBookingService
         };
     }
 
-    public async Task<IEnumerable<BookingDto>> GetUserBookingsAsync(String userName)
+    public async Task<IEnumerable<BookingDto>> GetUserBookingsAsync(Int32 id)
     {
-        List<Booking> bookings = await this.context.Bookings
+        List<Domain.Entities.Booking> bookings = await this.context.Bookings
             .Include(b => b.Room)
             .Include(b => b.User)
-            .Where(b => b.User.Name == userName)
+            .Where(b => b.User.Id == id)
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync();
 
@@ -85,68 +88,64 @@ public class BookingService : IBookingService
         });
     }
 
-    public async Task<BookingDto?> CreateBookingAsync(CreateBookingDto createBookingDto)
+    public async Task<BookingDto?> CreateBookingAsync(CreateBookingDto create_booking_dto)
     {
-        // Валидация дат
-        if (createBookingDto.CheckInDate >= createBookingDto.CheckOutDate)
+        if (create_booking_dto.CheckInDate >= create_booking_dto.CheckOutDate)
         {
-            throw new ArgumentException("Check-out date must be after check-in date");
+            throw new ArgumentException("Check out date must be after check in date");
         }
 
-        if (createBookingDto.CheckInDate < DateTime.UtcNow.Date)
+        if (create_booking_dto.CheckInDate < DateTime.UtcNow.Date)
         {
-            throw new ArgumentException("Check-in date cannot be in the past");
+            throw new ArgumentException("Check in date cannot be in the past");
         }
 
-        // Проверяем существование комнаты
-        Room? room = await this.context.Rooms.FindAsync(createBookingDto.RoomId);
+        Room? room = await this.context.Rooms.FindAsync(create_booking_dto.RoomId);
         if (room == null)
         {
             throw new ArgumentException("Room not found");
         }
 
-        // Ищем пользователя по имени, если не найден - создаем нового
+        //тут мы создадим нового пользователя, если не найдём.
         User? user = await this.context.Users
-            .FirstOrDefaultAsync(u => u.Name == createBookingDto.UserName);
+            .FirstOrDefaultAsync(u => u.Name == create_booking_dto.UserName);
 
         if (user == null)
         {
             user = new User
             {
-                Name = createBookingDto.UserName,
+                Name = create_booking_dto.UserName,
                 CreatedAt = DateTime.UtcNow
             };
-            this.context.Users.Add(user);
+            this.context.Users.Add(entity: user);
             await this.context.SaveChangesAsync();
         }
 
-        // Защита от двойного бронирования
-        // Проверяем, нет ли пересекающихся бронирований для этой комнаты
-        Boolean conflictingBooking = await this.context.Bookings
-            .AnyAsync(b => b.RoomId == createBookingDto.RoomId &&
-                b.CheckInDate < createBookingDto.CheckOutDate &&
-                b.CheckOutDate > createBookingDto.CheckInDate);
+        Boolean conflicting_booking = await this.context.Bookings
+            .AnyAsync(b => b.RoomId == create_booking_dto.RoomId &&
+                           b.CheckInDate < create_booking_dto.CheckOutDate &&
+                           b.CheckOutDate > create_booking_dto.CheckInDate);
 
-        if (conflictingBooking)
+        if (conflicting_booking)
         {
-            throw new InvalidOperationException("Room is already booked for the selected dates");
+            throw new InvalidOperationException("Room is booked for the selected dates");
         }
 
-        Booking booking = new Booking
+        Domain.Entities.Booking booking = new Domain.Entities.Booking
         {
-            RoomId = createBookingDto.RoomId,
+            RoomId = create_booking_dto.RoomId,
             UserId = user.Id,
-            CheckInDate = createBookingDto.CheckInDate,
-            CheckOutDate = createBookingDto.CheckOutDate,
+            CheckInDate = create_booking_dto.CheckInDate,
+            CheckOutDate = create_booking_dto.CheckOutDate,
             CreatedAt = DateTime.UtcNow
         };
 
-        this.context.Bookings.Add(booking);
+        this.context.Bookings.Add(entity: booking);
         await this.context.SaveChangesAsync();
 
         // Загружаем связанные сущности для возврата
-        await this.context.Entry(booking).Reference(b => b.Room).LoadAsync();
-        await this.context.Entry(booking).Reference(b => b.User).LoadAsync();
+        await this.context.Entry(entity: booking).Reference(b => b.Room).LoadAsync();
+        await this.context.Entry(entity: booking).Reference(b => b.User).LoadAsync();
 
         return new BookingDto
         {
