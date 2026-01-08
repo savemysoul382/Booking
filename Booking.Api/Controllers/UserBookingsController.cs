@@ -49,6 +49,7 @@ public class UserBookingsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<BookingDto>> CreateBooking([FromBody] CreateBookingDto create_booking_dto)
     {
+        // предпо
         if (!ModelState.IsValid)
         {
             return BadRequest(modelState: ModelState);
@@ -62,7 +63,8 @@ public class UserBookingsController : ControllerBase
                 return StatusCode(statusCode: StatusCodes.Status500InternalServerError, "Error while creating a booking");
             }
 
-            return CreatedAtAction(nameof(GetBooking), new {id = booking.Id}, value: booking);
+            // указываем, где можно получить созданную сущность
+            return CreatedAtAction(actionName: nameof(GetBooking), routeValues: new {id = booking.Id}, value: booking);
         }
         catch (ArgumentException ex)
         {
