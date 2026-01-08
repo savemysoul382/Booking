@@ -1,8 +1,11 @@
 using Booking.Application.DTOs;
+using Booking.Application.Enums;
+using Booking.Application.Interfaces;
 using Booking.Domain.Entities;
 using Booking.Domain.Enum;
 using Booking.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Booking.Application.Services;
 
@@ -78,27 +81,43 @@ public class RoomService : IRoomService
         };
     }
 
-    public async Task<Boolean> DeleteRoomAsync(Int32 id)
+    public async Task<DeleteRoomResult> DeleteRoomAsync(Int32 id)
     {
-        Room? room = await this.context.Rooms.FindAsync(id);
-
-        if (room == null)
+        if (id <= 0)
         {
-            return false;
+            return DeleteRoomResult.NotFound;
         }
 
-        // Проверяем, есть ли активные бронирования
-        Boolean has_active_bookings = await this.context.Bookings
-            .AnyAsync(b => b.RoomId == id && b.CheckOutDate > DateTime.UtcNow);
+        await using IDbContextTransaction transaction = await this.context.Database.BeginTransactionAsync();
 
-        if (has_active_bookings)
+        try
         {
-            return false;
+            // Проверяем, существует ли комната И нет ли активных бронирований
+            Room? room = await this.context.Rooms
+                .Where(r => r.Id == id)
+                .Where(r => !this.context.Bookings
+                    .Any(b => b.RoomId == id && b.CheckOutDate > DateTime.UtcNow))
+                .FirstOrDefaultAsync();
+
+            if (room == null)
+            {
+                Boolean exists = await this.context.Rooms.AnyAsync(r => r.Id == id);
+                return exists
+                    ? DeleteRoomResult.HasActiveBookings
+                    : DeleteRoomResult.NotFound;
+            }
+
+            // Удаляем найденную комнату (без повторного запроса)
+            this.context.Rooms.Remove(room);
+            await this.context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+            return DeleteRoomResult.Success;
         }
-
-        this.context.Rooms.Remove(entity: room);
-        await this.context.SaveChangesAsync();
-
-        return true;
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw; 
+        }
     }
 }

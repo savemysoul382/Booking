@@ -1,6 +1,6 @@
 using Booking.Application.DTOs;
 
-namespace Booking.Application.Services;
+namespace Booking.Application.Interfaces;
 
 public interface IRoomService
 {

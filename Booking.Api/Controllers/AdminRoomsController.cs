@@ -1,7 +1,8 @@
-using System.Diagnostics.CodeAnalysis;
 using Booking.Application.DTOs;
-using Booking.Application.Services;
+using Booking.Application.Enums;
+using Booking.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Booking.Api.Controllers;
 
@@ -36,7 +37,9 @@ public class AdminRoomsController : ControllerBase
         RoomDto? room = await this.room_service.GetRoomByIdAsync(id: id);
 
         if (room == null)
+        {
             return NotFound($"Room id = {id} not found");
+        }
 
         return Ok(value: room);
     }
@@ -55,11 +58,11 @@ public class AdminRoomsController : ControllerBase
         try
         {
             RoomDto room = await this.room_service.CreateRoomAsync(create_room_dto: createRoomDto);
-            return CreatedAtAction(nameof(GetRoom), new { id = room.Id }, room);
+            return CreatedAtAction(nameof(GetRoom), new {id = room.Id}, value: room);
         }
         catch (Exception)
         {
-            return StatusCode(500, "Creating room error");
+            return StatusCode(statusCode: StatusCodes.Status500InternalServerError, "Creating room error");
         }
     }
 
@@ -69,13 +72,21 @@ public class AdminRoomsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteRoom(Int32 id)
     {
-        Boolean deleted = await this.room_service.DeleteRoomAsync(id: id);
-
-        if (!deleted)
+        try
         {
-            return NotFound($"Room with id {id} not found or has active bookings");
-        }
+            DeleteRoomResult result = await this.room_service.DeleteRoomAsync(id: id);
 
-        return NoContent();
+            return result switch
+            {
+                DeleteRoomResult.NotFound => NotFound($"Room with id = {id} not found"),
+                DeleteRoomResult.HasActiveBookings => BadRequest($"Can't delete. Room with id = {id} has active bookings"),
+                DeleteRoomResult.Success => NoContent(),
+                _ => throw new InvalidOperationException("Unexpected result")
+            };
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(statusCode: StatusCodes.Status500InternalServerError, "Error while processing your request");
+        }
     }
 }
