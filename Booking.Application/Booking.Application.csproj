@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Booking.Domain\Booking.Domain.csproj" />
+    <ProjectReference Include="..\Booking.Infrastructure\Booking.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

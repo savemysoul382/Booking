@@ -1,4 +1,4 @@
-﻿using Booking.Domain;
+﻿using Booking.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Infrastructure;
@@ -11,7 +11,7 @@ public class BookingDbContext : DbContext
     }
 
     public DbSet<Room> Rooms { get; set; }
-    public DbSet<Domain.Booking> Bookings { get; set; }
+    public DbSet<Domain.Entities.Booking> Bookings { get; set; }
     public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder model_builder)
@@ -37,7 +37,7 @@ public class BookingDbContext : DbContext
         });
 
         // Настройка Booking
-        model_builder.Entity<Domain.Booking>(entity =>
+        model_builder.Entity<Domain.Entities.Booking>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.CheckInDate).IsRequired();

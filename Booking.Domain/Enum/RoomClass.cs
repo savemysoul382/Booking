@@ -1,4 +1,6 @@
-﻿public enum RoomClass
+﻿namespace Booking.Domain.Enum;
+
+public enum RoomClass
 {
     Standard = 1,
     Deluxe = 2,
