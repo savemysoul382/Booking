@@ -133,8 +133,8 @@ public class BookingService : IBookingService
 
         Domain.Entities.Booking booking = new Domain.Entities.Booking
         {
-            RoomId = create_booking_dto.RoomId,
-            UserId = user.Id,
+            Room = room,
+            User = user,
             CheckInDate = create_booking_dto.CheckInDate,
             CheckOutDate = create_booking_dto.CheckOutDate,
             CreatedAt = DateTime.UtcNow
@@ -142,10 +142,7 @@ public class BookingService : IBookingService
 
         this.context.Bookings.Add(entity: booking);
         await this.context.SaveChangesAsync();
-
-        // Загружаем связанные сущности для возврата
-        await this.context.Entry(entity: booking).Reference(b => b.Room).LoadAsync();
-        await this.context.Entry(entity: booking).Reference(b => b.User).LoadAsync();
+       
 
         return new BookingDto
         {
