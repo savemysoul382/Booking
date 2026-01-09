@@ -1,0 +1,39 @@
+name: booking
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: booking_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bookingdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+      
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bookingroom_api
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=bookingroomdb;Username=postgres;Password=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
