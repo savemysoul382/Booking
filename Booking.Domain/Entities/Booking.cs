@@ -1,6 +1,6 @@
 ﻿namespace Booking.Domain.Entities;
 
-public class Booking
+public record Booking
 {
     public Int32 Id { get; set; }
     public Int32 RoomId { get; set; }

@@ -1,6 +1,6 @@
 ﻿namespace Booking.Domain.Entities;
 
-public class User
+public record User
 {
     public Int32 Id { get; set; }
     public String Name { get; set; } = String.Empty;

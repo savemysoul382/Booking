@@ -2,6 +2,7 @@ using Booking.Application.DTOs;
 using Booking.Application.Interfaces;
 using Booking.Domain.Entities;
 using Booking.Infrastructure;
+using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Application.Services;
@@ -9,10 +10,12 @@ namespace Booking.Application.Services;
 public class BookingService : IBookingService
 {
     private readonly BookingDbContext context;
+    private readonly IMapper mapper;
 
-    public BookingService(BookingDbContext context)
+    public BookingService(BookingDbContext context, IMapper mapper)
     {
         this.context = context;
+        this.mapper = mapper;
     }
 
     public async Task<BookingDto?> GetBookingByIdAsync(Int32 id)
@@ -27,30 +30,8 @@ public class BookingService : IBookingService
             return null;
         }
 
-        return new BookingDto
-        {
-            Id = booking.Id,
-            RoomId = booking.RoomId,
-            UserId = booking.UserId,
-            UserName = booking.User.Name,
-            CheckInDate = booking.CheckInDate,
-            CheckOutDate = booking.CheckOutDate,
-            CreatedAt = booking.CreatedAt,
-            Room = new RoomDto
-            {
-                Id = booking.Room.Id,
-                Class = booking.Room.Class.ToString(),
-                Price = booking.Room.Price,
-                Description = booking.Room.Description,
-                CreatedAt = booking.Room.CreatedAt
-            },
-            User = new UserDto
-            {
-                Id = booking.User.Id,
-                Name = booking.User.Name,
-                CreatedAt = booking.User.CreatedAt
-            }
-        };
+        BookingDto booking_dto = this.mapper.Map<Booking.Domain.Entities.Booking, BookingDto>(source: booking);
+        return booking_dto;
     }
 
     public async Task<IEnumerable<BookingDto>> GetUserBookingsAsync(Int32 id)
@@ -62,30 +43,8 @@ public class BookingService : IBookingService
             .OrderByDescending(b => b.CreatedAt)
             .ToListAsync();
 
-        return bookings.Select(b => new BookingDto
-        {
-            Id = b.Id,
-            RoomId = b.RoomId,
-            UserId = b.UserId,
-            UserName = b.User.Name,
-            CheckInDate = b.CheckInDate,
-            CheckOutDate = b.CheckOutDate,
-            CreatedAt = b.CreatedAt,
-            Room = new RoomDto
-            {
-                Id = b.Room.Id,
-                Class = b.Room.Class.ToString(),
-                Price = b.Room.Price,
-                Description = b.Room.Description,
-                CreatedAt = b.Room.CreatedAt
-            },
-            User = new UserDto
-            {
-                Id = b.User.Id,
-                Name = b.User.Name,
-                CreatedAt = b.User.CreatedAt
-            }
-        });
+        IEnumerable<BookingDto> booking_dtos = this.mapper.Map<IEnumerable<BookingDto>>(source: bookings);
+        return booking_dtos;
     }
 
     public async Task<BookingDto?> CreateBookingAsync(CreateBookingDto create_booking_dto)
@@ -131,7 +90,7 @@ public class BookingService : IBookingService
             throw new InvalidOperationException("Room is booked for the selected dates");
         }
 
-        Domain.Entities.Booking booking = new Domain.Entities.Booking
+        Domain.Entities.Booking booking = new()
         {
             Room = room,
             User = user,
@@ -142,31 +101,8 @@ public class BookingService : IBookingService
 
         this.context.Bookings.Add(entity: booking);
         await this.context.SaveChangesAsync();
-       
 
-        return new BookingDto
-        {
-            Id = booking.Id,
-            RoomId = booking.RoomId,
-            UserId = booking.UserId,
-            UserName = booking.User.Name,
-            CheckInDate = booking.CheckInDate,
-            CheckOutDate = booking.CheckOutDate,
-            CreatedAt = booking.CreatedAt,
-            Room = new RoomDto
-            {
-                Id = booking.Room.Id,
-                Class = booking.Room.Class.ToString(),
-                Price = booking.Room.Price,
-                Description = booking.Room.Description,
-                CreatedAt = booking.Room.CreatedAt
-            },
-            User = new UserDto
-            {
-                Id = booking.User.Id,
-                Name = booking.User.Name,
-                CreatedAt = booking.User.CreatedAt
-            }
-        };
+        BookingDto booking_dto = this.mapper.Map<Booking.Domain.Entities.Booking, BookingDto>(source: booking);
+        return booking_dto;
     }
 }

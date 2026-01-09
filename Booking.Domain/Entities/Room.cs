@@ -1,8 +1,7 @@
 ﻿using Booking.Domain.Enum;
 
 namespace Booking.Domain.Entities;
-
-public class Room
+public record Room
 {
     public Int32 Id { get; set; }
     public RoomClass Class { get; set; }

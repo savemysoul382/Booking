@@ -4,6 +4,7 @@ using Booking.Application.Interfaces;
 using Booking.Domain.Entities;
 using Booking.Domain.Enum;
 using Booking.Infrastructure;
+using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -12,10 +13,12 @@ namespace Booking.Application.Services;
 public class RoomService : IRoomService
 {
     private readonly BookingDbContext context;
+    private readonly IMapper mapper;
 
-    public RoomService(BookingDbContext context)
+    public RoomService(BookingDbContext context, IMapper mapper)
     {
         this.context = context;
+        this.mapper = mapper;
     }
 
     public async Task<IEnumerable<RoomDto>> GetAllRoomsAsync()
@@ -24,14 +27,8 @@ public class RoomService : IRoomService
             .OrderBy(r => r.Id)
             .ToListAsync();
 
-        return rooms.Select(r => new RoomDto
-        {
-            Id = r.Id,
-            Class = r.Class.ToString(),
-            Price = r.Price,
-            Description = r.Description,
-            CreatedAt = r.CreatedAt
-        });
+        IEnumerable<RoomDto> room_dtos = this.mapper.Map<IEnumerable<RoomDto>>(source: rooms);
+        return room_dtos;
     }
 
     public async Task<RoomDto?> GetRoomByIdAsync(Int32 id)
@@ -43,14 +40,8 @@ public class RoomService : IRoomService
             return null;
         }
 
-        return new RoomDto
-        {
-            Id = room.Id,
-            Class = room.Class.ToString(),
-            Price = room.Price,
-            Description = room.Description,
-            CreatedAt = room.CreatedAt
-        };
+        RoomDto room_dto = this.mapper.Map<Room, RoomDto>(source: room);
+        return room_dto;
     }
 
     public async Task<RoomDto> CreateRoomAsync(CreateRoomDto create_room_dto)
@@ -75,15 +66,8 @@ public class RoomService : IRoomService
 
         this.context.Rooms.Add(entity: room);
         await this.context.SaveChangesAsync();
-
-        return new RoomDto
-        {
-            Id = room.Id,
-            Class = room.Class.ToString(),
-            Price = room.Price,
-            Description = room.Description,
-            CreatedAt = room.CreatedAt
-        };
+        RoomDto room_dto = this.mapper.Map<Room, RoomDto>(source: room);
+        return room_dto;
     }
 
     public async Task<DeleteRoomResult> DeleteRoomAsync(Int32 id)

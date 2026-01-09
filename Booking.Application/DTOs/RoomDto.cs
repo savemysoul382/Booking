@@ -1,6 +1,6 @@
 namespace Booking.Application.DTOs;
 
-public class RoomDto
+public record RoomDto
 {
     public Int32 Id { get; set; }
     public String Class { get; set; } = String.Empty;
