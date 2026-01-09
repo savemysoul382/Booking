@@ -18,12 +18,6 @@ builder.Services.AddSingleton(provider =>
     return config;
 });
 
-//builder.Services.AddScoped<IMapper>(provider =>
-//{
-//    TypeAdapterConfig config = provider.GetRequiredService<TypeAdapterConfig>();
-//    return new Mapper(config);
-//});
-
 builder.Services.AddScoped<IMapper, ServiceMapper>();
 
 #endregion
