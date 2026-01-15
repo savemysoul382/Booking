@@ -19,7 +19,7 @@ docker-compose -f docker-compose.full.yml up -d
 
 адрес: `http://localhost:8080` `http://localhost:8080/swagger`
 
-## Современная архитекутара и подходы к разработке рассмотрены в соседнем проекте.
+## Современная архитектура и подходы к разработке рассмотрены в соседнем проекте.
 https://github.com/savemysoul382/DevQuestions
 
 ### Tech
