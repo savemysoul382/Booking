@@ -7,19 +7,19 @@ Simple booking project
 - Swagger
 - Заполнены тестовые данные комнат, юзеров и бронирований
 
-### Запустить только Postgres в Докере, проект локально
+### Запустить только Postgres в Докере, проект локально.
 ```
 docker-compose up -d
 ```
 
-### Запустить API и Postgres в Докере
+### Запустить API и Postgres в Докере.
 ```
 docker-compose -f docker-compose.full.yml up -d
 ```
 
 адрес: `http://localhost:8080` `http://localhost:8080/swagger`
 
-## Современная архитекутар и подходы к разработке рассмотрены в сосекднем проекте
+## Современная архитекутара и подходы к разработке рассмотрены в соседнем проекте.
 https://github.com/savemysoul382/DevQuestions
 
 ### Tech
