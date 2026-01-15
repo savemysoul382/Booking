@@ -21,3 +21,21 @@ docker-compose -f docker-compose.full.yml up -d
 
 ## Современная архитекутар и подходы к разработке рассмотрены в сосекднем проекте
 https://github.com/savemysoul382/DevQuestions
+
+### Tech
+- Scrutor
+- FluentValidation
+
+### Architecture
+- Monolith
+- Modular monolith
+- Clean Architecture
+- Vertical Slice Architecture
+
+### Patterns and Methodologies
+- Result pattern
+- Unit of work
+- Repository
+- Handler и CommandHandler
+- IQuery и IQueryHandler
+- CQS
