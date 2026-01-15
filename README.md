@@ -25,6 +25,7 @@ https://github.com/savemysoul382/DevQuestions
 ### Tech
 - Scrutor
 - FluentValidation
+- Dapper
 
 ### Architecture
 - Monolith
